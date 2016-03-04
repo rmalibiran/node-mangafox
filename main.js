@@ -18,11 +18,16 @@ mangaFox.getDetails = function(id, callback){
 //Gets all available manga titles
 mangaFox.getManga = function(callback){
 	$.get('http://mangafox.me/manga/',function(data){
-		var list = {};
+		var list = [];
 		
 		data.find('.manga_list li a').each(function(index, d){
-			var b = $(d);			
-			list[mangaFox.fixTitle(b.text())] = {id:b.attr('rel'), title:b.text()};
+			var b = $(d);
+			var mng = {
+				_id: mangaFox.fixTitle(b.text()),
+				id:b.attr('rel'), 
+				title:b.text()
+			};
+			list.push(mng);
 		});
 		
 		(callback||function(){})(list);
@@ -40,23 +45,21 @@ mangaFox.getPages = function(manga, ch, callback){
 mangaFox.getImages = function(manga, ch, callback){
 	mangaFox.getPages(manga, ch, function(num){
 		var data = [];
-		var numPageRequestToBeReturned = num;
 		
 		var temp = function(n){
 			$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga)+'/v01/c'+mangaFox.pad(ch,3)+'/'+n+'.html', function(d){
-				data[n-1] = d.find('#viewer img').attr('src');
-
-				numPageRequestToBeReturned--;
-
-				if(numPageRequestsToBeReturned <= 0){
+				data.unshift(d.find('#viewer img').attr('src'))
+				if(n>1){
+					temp(n-1);
+				}
+				else{
 					(callback||function(){})(data);
 				}
 			}, true);
 		};
+		
+		temp(num);
 
-		for(i = 1; i <= num; i++){
-			temp(i);
-		}
 	});
 
 };
@@ -117,9 +120,3 @@ mangaFox.pad  = function(n, width, z) {
 };
 
 module.exports = mangaFox;
-
-
-
-
-
-
