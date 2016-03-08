@@ -64,6 +64,14 @@ mangaFox.getImages = function(manga, ch, callback){
 
 };
 
+//Gets the image url for a specified manga, chapter, and page
+mangaFox.getPageImage = function(manga, ch, page, callback){
+	$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga)+'/v01/c'+mangaFox.pad(ch,3)+'/'+page+'.html', function(d){
+		var imgUrl = d.find('#viewer img').attr('src');
+			(callback||function(){})(imgUrl);
+	}, true);
+}
+
 //Gets the number of available chapters
 mangaFox.getChapters = function(manga, callback){
 	$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga), function(d){
