@@ -79,6 +79,35 @@ mangaFox.getChapters = function(manga, callback){
 	}, true);
 };
 
+//Gets the chapters with name
+mangaFox.getChapterTitles = function(manga, callback){
+	$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga), function(data){
+
+		var list = [];
+		
+		data.find('.chlist').each(function(xIndex, rawUL){
+			var ul = $(rawUL);
+			
+			ul.find('li').each(function(yIndex, rawLI) {
+				var li = $(rawLI);
+				
+				var chapterObj = {
+					date: li.find('.date').text(),
+					text: li.find('.tips').text(),
+					title: li.find('.title').text(),
+					url: li.find('.tips').attr('href')
+				};
+
+				list.push(chapterObj);
+			});
+
+		});
+		
+		(callback||function(){})(list);
+		
+	}, true);
+};
+
 //get the list of currently popular manga
 mangaFox.getPopular = function(callback){
 	$.get('http://mangafox.me/', function(d){
