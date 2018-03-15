@@ -1,10 +1,12 @@
 var $ = new require('./jquack.js');
 
+var MANGAFOX_BASE_URL = 'http://fanfox.net';
+
 var mangaFox = {};
 
 //Gets info about a manga
 mangaFox.getDetails = function(id, callback){
-	$.post('http://mangafox.me/ajax/series.php', {sid:id}, function(data){
+	$.post(MANGAFOX_BASE_URL + '/ajax/series.php', {sid:id}, function(data){
 		
 		try{data = JSON.parse(data);}catch(e){};
 		
@@ -17,7 +19,7 @@ mangaFox.getDetails = function(id, callback){
 
 //Gets all available manga titles
 mangaFox.getManga = function(callback){
-	$.get('http://mangafox.me/manga/',function(data){
+	$.get(MANGAFOX_BASE_URL + '/manga/',function(data){
 		var list = [];
 		
 		data.find('.manga_list li a').each(function(index, d){
@@ -36,7 +38,7 @@ mangaFox.getManga = function(callback){
 
 //Get the number of pages in a chapter
 mangaFox.getPages = function(manga, ch, callback){
-	$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga)+'/c'+mangaFox.pad(ch,3)+'/1.html', function(d){
+	$.get(MANGAFOX_BASE_URL + '/manga/'+mangaFox.fixTitle(manga)+'/c'+mangaFox.pad(ch,3)+'/1.html', function(d){
 		callback((d.find('.l option').length-2)/2);
 	}, true);
 };
@@ -47,7 +49,7 @@ mangaFox.getImages = function(manga, ch, callback){
 		var data = [];
 		
 		var temp = function(n){
-			$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga)+'/v01/c'+mangaFox.pad(ch,3)+'/'+n+'.html', function(d){
+			$.get(MANGAFOX_BASE_URL + '/manga/'+mangaFox.fixTitle(manga)+'/v01/c'+mangaFox.pad(ch,3)+'/'+n+'.html', function(d){
 				data.unshift(d.find('#viewer img').attr('src'))
 				if(n>1){
 					temp(n-1);
@@ -66,51 +68,34 @@ mangaFox.getImages = function(manga, ch, callback){
 
 //Gets the image url for a specified manga, chapter, and page
 mangaFox.getPageImage = function(manga, ch, page, callback){
-	$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga)+'/v01/c'+mangaFox.pad(ch,3)+'/'+page+'.html', function(d){
+	$.get(MANGAFOX_BASE_URL + '/manga/'+mangaFox.fixTitle(manga)+'/v01/c'+mangaFox.pad(ch,3)+'/'+page+'.html', function(d){
 		var imgUrl = d.find('#viewer img').attr('src');
 			(callback||function(){})(imgUrl);
 	}, true);
 }
 
-//Gets the number of available chapters
 mangaFox.getChapters = function(manga, callback){
-	$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga), function(d){
+	$.get(MANGAFOX_BASE_URL + '/manga/'+mangaFox.fixTitle(manga), function(d){
+		var list = {};
+		$(d.find('.chlist .tips')).each(function(i,e) {
+			var b = $(e);
+			list[b.text()] = {id:b.attr('href'), title:b.text()};
+		});
+		console.log( list );
 		callback($(d.find('.chlist .tips')[0]).text().replace(/\D/g,''));
 	}, true);
 };
 
-//Gets the chapters with name
-mangaFox.getChapterTitles = function(manga, callback){
-	$.get('http://mangafox.me/manga/'+mangaFox.fixTitle(manga), function(data){
-
-		var list = [];
-		
-		data.find('.chlist').each(function(xIndex, rawUL){
-			var ul = $(rawUL);
-			
-			ul.find('li').each(function(yIndex, rawLI) {
-				var li = $(rawLI);
-				
-				var chapterObj = {
-					date: li.find('.date').text(),
-					text: li.find('.tips').text(),
-					title: li.find('.title').text(),
-					url: li.find('.tips').attr('href')
-				};
-
-				list.push(chapterObj);
-			});
-
-		});
-		
-		(callback||function(){})(list);
-		
+//Gets the number of latest chapter
+mangaFox.getLatestChapter = function(manga, callback){
+	$.get(MANGAFOX_BASE_URL + '/manga/'+mangaFox.fixTitle(manga), function(d){
+		callback($(d.find('.chlist .tips')[0]).text().replace(/\D/g,''));
 	}, true);
 };
 
 //get the list of currently popular manga
 mangaFox.getPopular = function(callback){
-	$.get('http://mangafox.me/', function(d){
+	$.get(MANGAFOX_BASE_URL + '/', function(d){
 		var list = {};
 		d.find('#popular li div.nowrap a').each(function(i,e){
 			var b = $(e);
@@ -122,7 +107,7 @@ mangaFox.getPopular = function(callback){
 
 //get the list of currently popular manga
 mangaFox.getLatest = function(callback){
-	$.get('http://mangafox.me/', function(d){
+	$.get(MANGAFOX_BASE_URL + '/', function(d){
 		var list = {};
 		d.find('#new li div.nowrap a').each(function(i,e){
 			var b = $(e);
